@@ -108,24 +108,53 @@ class AnalysisWorker:
                 risk_assessment = RiskClassifier.evaluate_risk(graph, wallet_address)
 
                 # 4. Persist Results to DB
-                # A. Save normalized transactions
+                # A. Save normalized transactions (conflict-free deduplication)
+                seen_keys = set()
                 for tx in all_txs:
-                    db_tx = DBTransaction(
-                        tx_hash=tx.tx_hash,
-                        chain=tx.chain,
-                        block_number=tx.block_number,
-                        timestamp=tx.timestamp,
-                        from_address=tx.from_address,
-                        to_address=tx.to_address,
-                        asset_type=tx.asset_type,
-                        token_address=tx.token_address,
-                        token_symbol=tx.token_symbol,
-                        token_decimals=tx.token_decimals,
-                        amount=tx.amount,
-                        gas_used=tx.gas_used,
-                        is_error=tx.is_error
-                    )
-                    session.add(db_tx)
+                    composite_key = (tx.chain, tx.tx_hash, tx.token_address or "", (tx.from_address or "").lower(), (tx.to_address or "").lower())
+                    if composite_key in seen_keys:
+                        continue
+                    seen_keys.add(composite_key)
+
+                    try:
+                        if "postgresql" in settings.DATABASE_URL.lower():
+                            from sqlalchemy.dialects.postgresql import insert as pg_insert
+                            stmt = pg_insert(DBTransaction).values(
+                                tx_hash=tx.tx_hash,
+                                chain=tx.chain,
+                                block_number=tx.block_number,
+                                timestamp=tx.timestamp,
+                                from_address=tx.from_address,
+                                to_address=tx.to_address,
+                                asset_type=tx.asset_type,
+                                token_address=tx.token_address,
+                                token_symbol=tx.token_symbol,
+                                token_decimals=tx.token_decimals,
+                                amount=tx.amount,
+                                gas_used=tx.gas_used,
+                                is_error=tx.is_error
+                            ).on_conflict_do_nothing()
+                            await session.execute(stmt)
+                        else:
+                            from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+                            stmt = sqlite_insert(DBTransaction).values(
+                                tx_hash=tx.tx_hash,
+                                chain=tx.chain,
+                                block_number=tx.block_number,
+                                timestamp=tx.timestamp,
+                                from_address=tx.from_address,
+                                to_address=tx.to_address,
+                                asset_type=tx.asset_type,
+                                token_address=tx.token_address,
+                                token_symbol=tx.token_symbol,
+                                token_decimals=tx.token_decimals,
+                                amount=tx.amount,
+                                gas_used=tx.gas_used,
+                                is_error=tx.is_error
+                            ).on_conflict_do_nothing()
+                            await session.execute(stmt)
+                    except Exception as tx_err:
+                        logger.debug(f"Transaction insert skipped: {tx_err}")
 
                 # B. Save Attributions
                 for attr in attributions:
