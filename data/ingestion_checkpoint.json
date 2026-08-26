@@ -1,0 +1,21 @@
+{
+  "target_transactions": 100000,
+  "current_transactions": 40130,
+  "ethereum_transactions": 40130,
+  "tron_transactions": 0,
+  "erc20_transactions": 17786,
+  "trc20_transactions": 0,
+  "usdt_transactions": 2250,
+  "unique_counterparties": 7590,
+  "vasp_seed_addresses": 1595,
+  "addresses_processed": 35,
+  "addresses_remaining": 1560,
+  "api_requests_made": 1313,
+  "failed_requests": 0,
+  "duplicate_records_skipped": 25532,
+  "is_running": true,
+  "last_updated": "2026-08-26T05:28:46.345484",
+  "last_active_address": "[Coinbase] 0xddfabcdc... (ethereum)",
+  "error_log": [],
+  "progress_percent": 40.13
+}
