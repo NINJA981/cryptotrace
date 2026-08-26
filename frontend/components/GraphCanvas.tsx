@@ -30,7 +30,9 @@ import {
   Sparkles,
   AlertTriangle
 } from 'lucide-react';
-import { GraphData, GraphNode, GraphEdge } from '../lib/types';
+import { GraphData, GraphNode, GraphEdge, NormalizedTransaction } from '../lib/types';
+import { SankeyFlowView } from './SankeyFlowView';
+import { TimelineReplayBar } from './TimelineReplayBar';
 
 // Register dagre layout plugin safely
 if (typeof window !== 'undefined') {
@@ -48,9 +50,16 @@ type RiskFilterType = 'ALL' | 'LOW' | 'MEDIUM' | 'HIGH';
 interface GraphCanvasProps {
   graphData: GraphData | null | undefined;
   isFullScreenView?: boolean;
+  transactions?: NormalizedTransaction[];
+  onPivotTarget?: (address: string) => void;
 }
 
-export const GraphCanvas: React.FC<GraphCanvasProps> = ({ graphData, isFullScreenView = false }) => {
+export const GraphCanvas: React.FC<GraphCanvasProps> = ({
+  graphData,
+  isFullScreenView = false,
+  transactions,
+  onPivotTarget
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
 
@@ -403,6 +412,23 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({ graphData, isFullScree
           selector: '.path-dimmed',
           style: {
             'opacity': 0.15,
+          },
+        },
+        {
+          selector: '.replay-active-edge',
+          style: {
+            'line-color': '#f59e0b',
+            'target-arrow-color': '#f59e0b',
+            'width': 4.5,
+            'z-index': 1000,
+          },
+        },
+        {
+          selector: 'node.replay-active-node',
+          style: {
+            'border-color': '#f59e0b',
+            'border-width': 4,
+            'z-index': 1000,
           },
         },
         {
@@ -920,44 +946,100 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({ graphData, isFullScree
         </div>
 
         {/* ======================================================================= */}
-        {/* 3. CYTOSCAPE GRAPH CANVAS WITH PATH FOCUS NOTIFICATION */}
+        {/* 3. CYTOSCAPE GRAPH CANVAS / SANKEY DUAL VIEW */}
         {/* ======================================================================= */}
-        <div className="flex-1 relative bg-forensic-bg h-full">
-          <div ref={containerRef} className="w-full h-full" />
+        {viewMode === 'FUND_FLOW' ? (
+          <div className="flex-1 bg-forensic-bg h-full overflow-hidden">
+            <SankeyFlowView
+              graphData={graphData}
+              rootAddress={rootAddress}
+              onSelectAddress={(addr) => {
+                const node = cyRef.current?.getElementById(addr);
+                if (node && node.length > 0) {
+                  node.select();
+                  setSelectedElement({ type: 'NODE', data: node.data() });
+                }
+              }}
+            />
+          </div>
+        ) : (
+          <div className="flex-1 relative bg-forensic-bg h-full flex flex-col">
+            <div ref={containerRef} className="w-full flex-1" />
 
-          {/* Active Path Focus Banner (Bottom Left of Canvas) */}
-          {focusedPath && (
-            <div className="absolute bottom-4 left-4 z-10 p-3 rounded-lg bg-forensic-surface/95 border border-cyan-500/40 shadow-xl backdrop-blur-md font-mono text-xs max-w-md animate-fade-in">
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center space-x-1.5 text-cyan-400 font-bold">
-                  <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-                  <span>PRIMARY FUND FLOW FOCUS</span>
-                </div>
-                <button
-                  onClick={() => {
-                    cyRef.current?.elements().removeClass('path-focused path-dimmed');
-                    setFocusedPath(null);
+            {/* Timeline Time-Machine Replay Bar */}
+            {transactions && transactions.length > 0 && (
+              <div className="p-3 border-t border-forensic-border bg-forensic-bg/95 z-10">
+                <TimelineReplayBar
+                  transactions={transactions}
+                  onStepChange={(tx) => {
+                    if (!cyRef.current || !tx) return;
+                    const cy = cyRef.current;
+                    cy.elements().removeClass('replay-active-edge replay-active-node path-dimmed');
+
+                    const src = (tx.from_address || '').toLowerCase();
+                    const dst = (tx.to_address || '').toLowerCase();
+
+                    cy.elements().addClass('path-dimmed');
+
+                    const matchingNodes = cy.nodes().filter((n: any) => {
+                      const nid = n.id().toLowerCase();
+                      return nid === src || nid === dst;
+                    });
+
+                    const matchingEdges = cy.edges().filter((e: any) => {
+                      const s = e.source().id().toLowerCase();
+                      const t = e.target().id().toLowerCase();
+                      return (s === src && t === dst) || (e.data('txHash') && e.data('txHash').toLowerCase() === tx.tx_hash.toLowerCase());
+                    });
+
+                    matchingNodes.removeClass('path-dimmed').addClass('replay-active-node');
+                    matchingEdges.removeClass('path-dimmed').addClass('replay-active-edge');
+
+                    if (matchingEdges.length > 0) {
+                      cy.animate({
+                        center: { eles: matchingEdges },
+                        duration: 250,
+                      });
+                    }
                   }}
-                  className="text-forensic-textDim hover:text-forensic-text p-0.5"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
+                />
               </div>
-              <div className="text-[11px] text-forensic-textDim space-y-1">
-                <div>
-                  Destination:{' '}
-                  <strong className="text-emerald-400">
-                    {focusedPath.destinationName || focusedPath.targetNodeId.slice(0, 10) + '...'}
-                  </strong>
+            )}
+
+            {/* Active Path Focus Banner (Bottom Left of Canvas) */}
+            {focusedPath && (
+              <div className="absolute bottom-20 left-4 z-10 p-3 rounded-lg bg-forensic-surface/95 border border-cyan-500/40 shadow-xl backdrop-blur-md font-mono text-xs max-w-md animate-fade-in">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center space-x-1.5 text-cyan-400 font-bold">
+                    <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                    <span>PRIMARY FUND FLOW FOCUS</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      cyRef.current?.elements().removeClass('path-focused path-dimmed');
+                      setFocusedPath(null);
+                    }}
+                    className="text-forensic-textDim hover:text-forensic-text p-0.5"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 </div>
-                <div className="flex justify-between">
-                  <span>Hop Distance: <strong>{focusedPath.hopDistance} Hop(s)</strong></span>
-                  <span>Observable Flow: <strong className="text-cyan-400">{focusedPath.totalVolume.toFixed(2)} {graphMetrics.primaryToken}</strong></span>
+                <div className="text-[11px] text-forensic-textDim space-y-1">
+                  <div>
+                    Destination:{' '}
+                    <strong className="text-emerald-400">
+                      {focusedPath.destinationName || focusedPath.targetNodeId.slice(0, 10) + '...'}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Hop Distance: <strong>{focusedPath.hopDistance} Hop(s)</strong></span>
+                    <span>Observable Flow: <strong className="text-cyan-400">{focusedPath.totalVolume.toFixed(2)} {graphMetrics.primaryToken}</strong></span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* ======================================================================= */}
         {/* 4. RIGHT FORENSIC INSPECTOR DRAWER */}
@@ -1037,16 +1119,28 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({ graphData, isFullScree
                     </div>
                   </div>
 
-                  {/* Action Link */}
-                  <a
-                    href={`https://etherscan.io/address/${selectedElement.data.fullAddress || selectedElement.data.id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-center space-x-1.5 w-full py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-colors"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    <span>View on Blockchain Explorer</span>
-                  </a>
+                  {/* Action Link & Pivot Trigger */}
+                  <div className="space-y-2 pt-1">
+                    <a
+                      href={`https://etherscan.io/address/${selectedElement.data.fullAddress || selectedElement.data.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center space-x-1.5 w-full py-2 rounded bg-forensic-surfaceRaised hover:bg-forensic-border border border-forensic-border text-forensic-text font-medium text-xs transition-colors"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span>View on Blockchain Explorer</span>
+                    </a>
+
+                    {onPivotTarget && (
+                      <button
+                        onClick={() => onPivotTarget(selectedElement.data.fullAddress || selectedElement.data.id)}
+                        className="w-full py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold font-mono text-xs flex items-center justify-center space-x-1.5 shadow-sm transition-all cursor-pointer"
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                        <span>Pivot & Trace This Target</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 

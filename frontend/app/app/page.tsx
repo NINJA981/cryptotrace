@@ -289,7 +289,11 @@ export default function InvestigationAppPage() {
                 </div>
 
                 <div className="lg:col-span-7 space-y-4">
-                  <GraphCanvas graphData={graphData} />
+                  <GraphCanvas
+                    graphData={graphData}
+                    transactions={transactions}
+                    onPivotTarget={(addr) => handleStartAnalysis(addr, 3)}
+                  />
                   <TransactionLedger transactions={transactions} />
                 </div>
               </div>
@@ -345,7 +349,12 @@ export default function InvestigationAppPage() {
         {/* TAB 2: FULL-SCREEN GRAPH STUDIO */}
         {activeTab === 'GRAPH_STUDIO' && (
           <div className="space-y-4">
-            <GraphCanvas graphData={graphData} isFullScreenView={true} />
+            <GraphCanvas
+              graphData={graphData}
+              isFullScreenView={true}
+              transactions={transactions}
+              onPivotTarget={(addr) => handleStartAnalysis(addr, 3)}
+            />
             <TransactionLedger transactions={transactions} />
           </div>
         )}
