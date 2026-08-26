@@ -121,39 +121,107 @@ Its primary mission is to trace fund flows originating from suspect or illicit c
 ## 3. Detailed Low-Level Module & Function Directory
 
 ```
-backend/app/
-├── core/
-│   ├── address_validator.py       # Cryptographic address detection & checksumming
-│   └── config.py                  # Global Pydantic environment configuration
-├── models/
-│   └── database.py                # SQLAlchemy ORM async database schema
-├── schemas/
-│   └── analysis.py                # Pydantic validation & JSON serialization schemas
-├── services/
-│   ├── blockchain/
-│   │   ├── base.py                # Abstract Base Class for blockchain providers
-│   │   ├── etherscan.py           # Ethereum Mainnet data fetcher & normalizer
-│   │   ├── tron.py                # Tron Network data fetcher & normalizer
-│   │   └── factory.py             # Provider runtime resolver factory
+cryptotrace/
+├── .env.example                   # Environment configuration template
+├── .gitignore                     # Production ignore patterns for keys & build caches
+├── docker-compose.yml             # Orchestration for containerized multi-service deployment
+├── render.yaml                    # Infrastructure-as-code blueprint for Render backend
+├── package.json                   # Root workspace scripts
+├── landing_page.html              # Standalone high-impact landing page asset
+│
+├── backend/
+│   ├── Dockerfile                 # Multi-stage Python 3.11 container definition
+│   ├── requirements.txt           # Production Python dependencies
+│   ├── attribution_config.yaml    # Configurable weights & thresholds (attribution + candidate discovery)
+│   ├── scripts/
+│   │   ├── benchmark_accuracy.py  # Offline test benchmark script
+│   │   └── run_candidate_discovery.py # Script to sweep VASP seeds & discover candidates
+│   └── app/
+│       ├── core/
+│       │   ├── address_validator.py       # Cryptographic address detection & checksumming
+│       │   └── config.py                  # Global Pydantic environment configuration
+│       ├── models/
+│       │   └── database.py                # SQLAlchemy ORM schema (AnalysisRun, CandidateWallet, etc.)
+│       ├── schemas/
+│       │   └── analysis.py                # Pydantic validation & JSON DTOs (including CandidateWalletSchema)
+│       ├── services/
+│       │   ├── blockchain/
+│       │   │   ├── base.py                # Abstract Base Class for blockchain providers
+│       │   │   ├── etherscan.py           # Ethereum Mainnet data fetcher & normalizer
+│       │   │   ├── tron.py                # Tron Network data fetcher & normalizer
+│       │   │   └── factory.py             # Blockchain Provider factory
+│       │   ├── vasp/
+│       │   │   └── matcher.py             # In-memory O(1) VASP registry matching engine
+│       │   ├── graph/
+│       │   │   └── builder.py             # NetworkX MultiDiGraph BFS traversal & Cytoscape exporter
+│       │   ├── attribution/
+│       │   │   ├── engine.py              # 5-pillar heuristic scoring engine
+│       │   │   ├── ml_scorer.py           # Auxiliary tabular ML gradient boosted ranker
+│       │   │   └── risk_classifier.py     # Structural on-chain risk pattern classifier
+│       │   ├── reporting/
+│       │   │   ├── generator.py           # Investigation dossier & markdown generator
+│       │   │   └── legal_notice_generator.py # CrPC / BNSS legal freeze notice generator
+│       │   └── discovery/
+│       │       ├── candidate_miner.py     # VASP counterparty extraction & strict filtering engine
+│       │       └── candidate_scorer.py    # 5-factor Candidate Quality Scoring engine (0-100)
+│       ├── workers/
+│       │   ├── analysis_worker.py         # Asynchronous analysis pipeline coordinator
+│       │   ├── ingestion_worker.py        # Background multi-chain dataset ingestion worker
+│       │   └── candidate_discovery_worker.py # Background VASP seed counterparty discovery worker
+│       ├── api/
+│       │   └── v1/
+│       │       └── router.py              # FastAPI REST endpoints & candidate discovery routes
+│       └── main.py                        # FastAPI application bootstrap, CORS & lifecycle
+│
+├── frontend/
+│   ├── Dockerfile                 # Node 20 Alpine production container definition
+│   ├── vercel.json                # Vercel deployment configuration
+│   ├── package.json               # Next.js 14, Tailwind CSS, Cytoscape dependencies
+│   ├── tailwind.config.js         # Forensic dark/light mode palette configuration
+│   ├── tsconfig.json              # TypeScript compilation rules
+│   ├── app/
+│   │   ├── layout.tsx             # Root HTML layout with metadata
+│   │   ├── page.tsx               # Main public landing page route
+│   │   ├── not-found.tsx          # Custom forensic 404 page
+│   │   ├── globals.css            # Tailwind utilities and smooth animations
+│   │   └── app/
+│   │       └── page.tsx           # Primary Investigation Workstation & multi-tab console
+│   ├── components/
+│   │   ├── Navbar.tsx                 # Navigation bar with active views & theme switcher
+│   │   ├── WalletSearch.tsx           # Search input with auto-discovered on-chain target leads
+│   │   ├── CandidateDiscoveryView.tsx # Unknown wallet discovery table, filters, & score breakdown modal
+│   │   ├── GraphCanvas.tsx            # Interactive physics-based Cytoscape.js graph canvas
+│   │   ├── AttributionCard.tsx        # Ranked VASP attribution results & score breakdowns
+│   │   ├── RiskCard.tsx               # Structural risk level badge & indicator alerts
+│   │   ├── EvidenceFeed.tsx           # Tamper-evident transaction & proximity audit trail
+│   │   ├── TransactionLedger.tsx      # Filterable on-chain transaction ledger table
+│   │   ├── NCRPTriageView.tsx         # Bulk cybercrime complaint triage dashboard
+│   │   ├── VASPRegistryModal.tsx      # Searchable directory of 1,595+ verified exchange addresses
+│   │   ├── FreezeNoticeModal.tsx      # Section 91 CrPC / BNSS legal requisition editor & PDF exporter
+│   │   ├── ReportModal.tsx            # Investigation dossier exporter (JSON & Markdown)
+│   │   ├── ProvenanceSection.tsx      # Mathematical attribution methodology & audit documentation
+│   │   ├── MLEvaluationModal.tsx      # ML model benchmark diagnostics & feature importance modal
+│   │   ├── DatasetStatusModal.tsx     # Real-time multi-chain dataset ingestion status modal
+│   │   └── LandingPageContent.tsx     # Dynamic wrapper for landing page
+│   └── lib/
+│       ├── api.ts                     # Fetch client binding all backend REST endpoints
+│       └── types.ts                   # TypeScript interfaces matching backend models & schemas
+│
+├── data/
 │   ├── vasp/
-│   │   └── matcher.py             # In-memory O(1) VASP registry matching engine
-│   ├── graph/
-│   │   └── builder.py             # NetworkX MultiDiGraph BFS traversal & Cytoscape exporter
-│   ├── attribution/
-│   │   └── engine.py              # Multi-variable heuristic scoring engine
-│   ├── evidence/
-│   │   └── generator.py           # Concrete audit evidence synthesizer
-│   ├── risk/
-│   │   └── classifier.py          # Structural on-chain risk pattern classifier
-│   └── reporting/
-│       ├── generator.py           # Investigation dossier & markdown generator
-│       └── legal_notice_generator.py # CrPC / BNSS legal freeze notice generator
-├── workers/
-│   └── analysis_worker.py         # Asynchronous pipeline coordinator & cache manager
-├── api/
-│   └── v1/
-│       └── router.py              # FastAPI REST endpoints & request handlers
-└── main.py                        # Application bootstrap, CORS, and lifecycle setup
+│   │   ├── vasp_addresses_master.csv # Master curated VASP registry (1,595 verified addresses)
+│   │   └── vasp_addresses.csv        # Active VASP seed database
+│   └── ppt_assets/                   # Architecture and presentation visual assets
+│
+└── docs/
+    ├── ARCHITECTURE.md            # Low-level architectural specification
+    ├── API.md                     # Complete REST API reference
+    ├── DATA_SOURCES.md            # Verified data sources & provenance citations
+    ├── DEPLOYMENT.md              # Production deployment guide (Vercel, Render, Docker)
+    ├── METHODOLOGY.md             # Forensic mathematical scoring formulas & legal basis
+    ├── MODEL_CARD.md              # Model cards for ML attribution ranker
+    ├── LIMITATIONS.md             # Known technical & legal boundaries
+    └── VASP_REGISTRY.md           # Registry curation & verification methodology
 ```
 
 ---
@@ -608,4 +676,85 @@ The system includes a dedicated, modular tabular machine learning framework (`ba
    - **Baseline 2 (ML Model Alone)**: 100.0% Top-1 Accuracy, 100.0% Macro F1
    - **Baseline 3 (Hybrid Ensemble 0.70 Rule + 0.30 ML)**: 100.0% Top-1 Accuracy, +0.0% Lift over Baseline
 5. **Deployment Gate & Diagnostic Exposure**: Because the deterministic baseline achieves 100.0% Top-1 accuracy on clean graph topologies, the ML layer is maintained in **"EXPERIMENTAL_EVALUATION_ONLY"** status and exposed via `GET /api/v1/ml/evaluation`, `GET /api/v1/ml/status`, and the UI **ML Evaluation** diagnostics modal, keeping the deterministic rule engine as the primary production attribution method.
+
+---
+
+## 17. Automated Unknown Wallet Candidate Discovery & Quality Ranking Pipeline
+
+Starting from the verified VASP registry, the candidate discovery pipeline eliminates hardcoded demo addresses by dynamically mining unlabeled external counterparties, calculating multi-hop graph connectivity, and evaluating their suitability for forensic investigation.
+
+### Discovery Architecture & Flow
+
+```
+                      Verified VASP Registry
+                                ↓
+                  Fetch Native + Token History
+                                ↓
+                 Counterparty Extraction & Dedup
+                                ↓
+               ┌────────────────┴────────────────┐
+               ↓                                 ↓
+         Strict Filtering                Surviving Wallets
+    • Exclude known VASPs (O(1))         • Non-VASP External
+    • Exclude smart contracts            • Real Activity
+    • Exclude null/burn addresses        • 1-3 Hop VASP Reachable
+               │                                 │
+               └────────────────┬────────────────┘
+                                ↓
+                  Fetch Candidate Tx History
+                                ↓
+                  Build 1–3 Hop Graph Profile
+                                ↓
+             Compute Candidate Quality Score (0–100)
+                                ↓
+             Persist to `candidate_wallets` Table
+                                ↓
+                 ┌──────────────┴──────────────┐
+                 ↓                             ↓
+        Candidate Discovery UI        Dynamic Search Leads
+```
+
+### 5-Pillar Candidate Quality Scoring Formulation
+
+$$S_{\text{Candidate}} = 0.25 \cdot S_{\text{history}} + 0.20 \cdot S_{\text{activity}} + 0.20 \cdot S_{\text{graph}} + 0.20 \cdot S_{\text{vasp}} + 0.15 \cdot S_{\text{flow}}$$
+
+| Pillar | Weight | Description | Metric Normalization |
+| :--- | :---: | :--- | :--- |
+| **History Quality** ($S_{\text{history}}$) | 25% | Transaction volume & token diversity | $\min(100, \text{tx\_count} \times 2.0 + \text{token\_txs} \times 1.5)$ |
+| **Activity Quality** ($S_{\text{activity}}$) | 20% | Lifespan & bidirectional flow | Active days coverage + balance ratio between in/out txs |
+| **Graph Quality** ($S_{\text{graph}}$) | 20% | Counterparty degree & diversity | $\min\left(100, \frac{\text{unique\_counterparties}}{30} \times 100\right)$ |
+| **VASP Connectivity** ($S_{\text{vasp}}$) | 20% | 1–3 hop proximity & cluster breadth | 100 for 1-hop, 70 for 2-hop, 40 for 3-hop + multi-cluster bonus |
+| **Flow Quality** ($S_{\text{flow}}$) | 15% | USD volume interacting with VASPs | $\min\left(100, \frac{\log_{10}(\text{vol\_usd} + 1)}{6.0} \times 100\right)$ |
+
+---
+
+## 18. Continuous Integration & Production Deployment Architecture
+
+The platform uses a decoupled serverless/containerized continuous deployment architecture linked directly to the GitHub repository **[NINJA981/cryptotrace](https://github.com/NINJA981/cryptotrace)**:
+
+```
+                          ┌───────────────────────────┐
+                          │   git push origin main    │
+                          │  (NINJA981/cryptotrace)   │
+                          └─────────────┬─────────────┘
+                                        │
+                 ┌──────────────────────┴──────────────────────┐
+                 ↓                                             ↓
+      ┌─────────────────────┐                       ┌─────────────────────┐
+      │   Vercel Frontend   │                       │   Render Backend    │
+      │ • Root: `frontend/` │                       │ • Python 3.11 / API │
+      │ • Global Edge CDN   │                       │ • Auto Uvicorn Start│
+      └──────────┬──────────┘                       └──────────┬──────────┘
+                 ↓                                             ↓
+   https://cryptotrace-sand.vercel.app            https://cryptotrace-backend.onrender.com
+```
+
+### Self-Hosted Orchestration (`docker-compose.yml`)
+For on-premise law enforcement or offline environments, `docker-compose.yml` provides a single-command deployment:
+```bash
+docker-compose up -d --build
+```
+- **Backend Service**: Port `8000`, healthcheck on `/api/v1/health`.
+- **Frontend Service**: Port `3000`, pre-configured API routing.
+
 

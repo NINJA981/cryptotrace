@@ -1,141 +1,151 @@
-# SIH Cryptocurrency Wallet-to-VASP Attribution Platform
+# CRYPTOTRACE: Multi-Chain Cryptocurrency VASP Attribution & Forensic Intelligence Platform
 
-> **Problem Statement**: Automated Attribution of Unknown Cryptocurrency Wallets to Nearest Virtual Asset Service Providers (VASPs) through Blockchain Intelligence APIs.
+> **Smart India Hackathon (SIH)**: Automated Attribution of Unknown Cryptocurrency Wallets to Nearest Virtual Asset Service Providers (VASPs) through Multi-Chain Blockchain Intelligence APIs.
 
-[![Backend](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com)
-[![Frontend](https://img.shields.io/badge/Frontend-Next.js%2014-black.svg)](https://nextjs.org)
-[![Graph](https://img.shields.io/badge/Graph-Cytoscape.js%20%2B%20NetworkX-blue.svg)](https://networkx.org)
-[![Database](https://img.shields.io/badge/Database-SQLite%20%2F%20PostgreSQL-336791.svg)](https://www.sqlalchemy.org)
-
----
-
-## 📌 Executive Summary
-
-This platform is a **working, deterministic blockchain intelligence engine** built for Smart India Hackathon (SIH). It traces Ethereum transaction flows up to **3 hops**, identifies the nearest **Virtual Asset Service Providers (VASPs)** using a curated registry of publicly verified exchange clusters, calculates explainable attribution scores, classifies structural risk indicators, and provides investigators with an interactive Cytoscape.js graph and legal dossier generator.
-
-### 🛡️ Core Guarantees:
-- **100% Real Blockchain Data**: Queries real Ethereum explorer APIs (Etherscan / compatible providers). No synthetic or mock data is ever presented as real analysis.
-- **Explainable Attribution**: Attribution scores (0–100) are computed mathematically via a configurable heuristic weighting system (`attribution_config.yaml`). No fake AI/LLM hallucinations.
-- **Curated VASP Provenance**: Seeded with verified addresses from Etherscan verified labels, DefiLlama reserve proofs, and Arkham verified entities.
-- **Zero-Setup Local Run**: Defaults to SQLite for instant out-of-the-box local execution, while fully supporting PostgreSQL in production.
+[![Frontend](https://img.shields.io/badge/Frontend-Vercel%20Live-black.svg?style=flat&logo=vercel)](https://cryptotrace-sand.vercel.app)
+[![Backend](https://img.shields.io/badge/Backend-Render%20Live-46E3B7.svg?style=flat&logo=render)](https://cryptotrace-backend.onrender.com/api/v1/health)
+[![GitHub](https://img.shields.io/badge/GitHub-NINJA981%2Fcryptotrace-181717.svg?style=flat&logo=github)](https://github.com/NINJA981/cryptotrace)
+[![Framework](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2%20App%20Router-000000.svg?logo=next.js)](https://nextjs.org)
 
 ---
 
-## 🏗️ System Architecture
+## 🌐 Live Deployments
 
-```mermaid
-flowchart TD
-    subgraph UI ["Investigator UI (Next.js 14 + Tailwind + Cytoscape)"]
-        Dashboard["Investigator Dashboard"]
-        GraphUI["Interactive Cytoscape.js Graph Canvas"]
-        EvidenceUI["Verifiable Audit Evidence Feed"]
-        ReportUI["Dossier & Report Generator"]
-    end
+- 🖥️ **Live Workstation & Landing Page**: **[https://cryptotrace-sand.vercel.app](https://cryptotrace-sand.vercel.app)**
+- ⚙️ **Production REST API**: **[https://cryptotrace-backend.onrender.com/api/v1](https://cryptotrace-backend.onrender.com/api/v1)**
+- 📊 **Health Check & Diagnostics**: **[`/api/v1/health`](https://cryptotrace-backend.onrender.com/api/v1/health)** *(1,595+ verified VASP clusters indexed)*
 
-    subgraph Backend ["FastAPI Intelligence Backend"]
-        API["REST API Router (/api/v1)"]
-        Worker["Async Background Pipeline Worker"]
-        Validator["Address Format & EIP-55 Validator"]
-        Provider["EVM Blockchain Provider (Etherscan / Alchemy)"]
-        GraphEngine["NetworkX 3-Hop Traversal Engine"]
-        VASPMatcher["VASP Registry Matcher"]
-        AttrEngine["Explainable Attribution Engine"]
-        RiskEngine["On-Chain Risk Classifier"]
-        EvidenceGen["Evidence Generator"]
-        ReportGen["Markdown / PDF Dossier Generator"]
-    end
+---
 
-    subgraph Data ["Data Layer"]
-        DB[(Database: SQLite / PostgreSQL)]
-        CSV["Curated VASP Seed Dataset (data/vasp/)"]
-        YAML["Heuristic Config (attribution_config.yaml)"]
-    end
+## 📌 Executive Summary & Capabilities
 
-    Dashboard -->|POST /analyze| API
-    API --> Worker
-    Worker --> Validator
-    Validator --> Provider
-    Provider -->|Real ETH / ERC-20 TXs| GraphEngine
-    GraphEngine --> VASPMatcher
-    VASPMatcher --> CSV
-    VASPMatcher --> AttrEngine
-    AttrEngine --> YAML
-    AttrEngine --> EvidenceGen
-    AttrEngine --> RiskEngine
-    EvidenceGen --> DB
-    RiskEngine --> DB
-    Worker -->|Status Polling| Dashboard
-    DB --> GraphUI
-    EvidenceGen --> EvidenceUI
-    ReportGen --> ReportUI
+**CRYPTOTRACE** is an institutional multi-chain cryptocurrency forensic intelligence platform designed for law enforcement agencies (LEAs), cybercrime investigation cells, and Financial Intelligence Units (FIUs). 
+
+It traces fund flows originating from suspect cryptocurrency wallets across **Ethereum (ETH / ERC-20)** and **Tron (TRX / TRC-20 USDT)** networks, determines probabilistic and deterministic associations to custodial **Virtual Asset Service Providers (VASPs)**, evaluates topological risks, and automates **Section 91 CrPC / Section 94 BNSS Asset Preservation & Freeze Notices**.
+
+### 🛡️ Core Capabilities:
+1. **Multi-Chain Deep Tracing**: Native support for Ethereum (Etherscan v2 API) and Tron Network (TronGrid Pro API Key with TRC-20 USDT parsing).
+2. **Automated Unknown Candidate Discovery & Quality Ranking**: Mined directly from verified VASP cluster counterparties without hardcoded demo addresses, scored via a 5-factor quality formulation ($0 - 100$).
+3. **Deterministic 5-Pillar Attribution Scoring**: Explainable mathematical attribution ($S_{\text{prox}}, S_{\text{flow}}, S_{\text{freq}}, S_{\text{behav}}, S_{\text{rec}}$) with zero hallucination.
+4. **Interactive Graph Studio**: Physics-based Cytoscape.js canvas with directional volumetric flow, node role classification, and address drawers.
+5. **Court-Admissible Legal Notice Generator**: Pre-populates official Section 91 CrPC / Section 94 BNSS freeze notices with verified cryptographic hashes and compliance emails.
+6. **National Cyber Crime (NCRP) Triage**: Bulk incident intake queue with loss triage prioritization and 1-click attribution launching.
+
+---
+
+## 🏗️ Project Structure
+
+```
+cryptotrace/
+├── .env.example                   # Environment configuration template
+├── .gitignore                     # Secrets and build cache exclusions
+├── docker-compose.yml             # Containerized multi-service orchestration
+├── render.yaml                    # Infrastructure-as-code blueprint for Render
+├── package.json                   # Root workspace scripts
+├── landing_page.html              # High-impact landing page asset
+│
+├── backend/
+│   ├── Dockerfile                 # Python 3.11 production container
+│   ├── requirements.txt           # Backend dependencies
+│   ├── attribution_config.yaml    # Configurable scoring weights & thresholds
+│   ├── scripts/
+│   │   ├── benchmark_accuracy.py  # Offline validation benchmark suite
+│   │   └── run_candidate_discovery.py # Script to sweep VASP seeds & discover candidates
+│   └── app/
+│       ├── core/                  # Address validation & Pydantic settings
+│       ├── models/                # SQLAlchemy database models (AnalysisRun, CandidateWallet, etc.)
+│       ├── schemas/               # Pydantic validation & response DTOs
+│       ├── services/
+│       │   ├── blockchain/        # EtherscanProvider, TronProvider, BlockchainProviderFactory
+│       │   ├── vasp/              # In-memory O(1) VASP registry matcher
+│       │   ├── graph/             # NetworkX MultiDiGraph traversal & Cytoscape exporter
+│       │   ├── attribution/       # 5-pillar heuristic scoring & risk classifier
+│       │   ├── discovery/         # Candidate miner & 5-factor quality scorer
+│       │   └── reporting/         # Section 91 CrPC notice & dossier generator
+│       ├── workers/               # AnalysisWorker, CandidateDiscoveryWorker, IngestionWorker
+│       └── api/v1/router.py       # FastAPI REST endpoints
+│
+├── frontend/
+│   ├── Dockerfile                 # Node 20 Alpine production container
+│   ├── vercel.json                # Vercel deployment configuration
+│   ├── package.json               # Next.js 14, Tailwind, Cytoscape dependencies
+│   ├── app/                       # Next.js App Router (Landing `/`, Workstation `/app`)
+│   ├── components/                # Modular UI components (Canvas, Candidate Discovery, NCRP, Legal)
+│   └── lib/                       # Typed API client (`api.ts`) & data models (`types.ts`)
+│
+├── data/
+│   ├── vasp/                      # 1,595+ verified VASP master registry (Binance, OKX, CoinDCX, etc.)
+│   └── ppt_assets/                # Visual assets and presentation diagrams
+│
+└── docs/
+    ├── ARCHITECTURE.md            # Low-level architectural specification
+    ├── API.md                     # Complete REST API reference
+    ├── DATA_SOURCES.md            # Data provenance & verification sources
+    ├── DEPLOYMENT.md              # Production deployment guide
+    ├── METHODOLOGY.md             # Forensic mathematical scoring formulas
+    ├── MODEL_CARD.md              # Model card for auxiliary ML ranker
+    ├── LIMITATIONS.md             # Technical and operational boundaries
+    └── VASP_REGISTRY.md           # VASP curation & verification methodology
 ```
 
 ---
 
-## 🚀 Quickstart Guide
+## 🚀 Local Development Setup
 
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+ and npm
 
-### 1. Environment Setup
+### 1. Clone & Configure
 ```bash
-# Clone the repository and navigate to root
-cd "sih retry"
-
-# Copy example environment file
+git clone https://github.com/NINJA981/cryptotrace.git
+cd cryptotrace
 cp .env.example .env
 ```
 
-*(Optional)* Add your free [Etherscan API Key](https://etherscan.io/apis) into `.env`:
+Add your API Keys in `.env`:
 ```env
-BLOCKCHAIN_API_KEY=your_api_key_here
-BLOCKCHAIN_API_URL=https://api.etherscan.io/api
+BLOCKCHAIN_API_KEY=your_etherscan_key
+BLOCKCHAIN_API_URL=https://api.etherscan.io/v2/api
+TRONGRID_API_KEY=66e9b9ff-d1b8-41a2-8f0d-2d9b555bc17a
 DATABASE_URL=sqlite+aiosqlite:///./crypto_trace.db
 MAX_HOPS=3
 ```
 
----
-
-### 2. Start the Backend API
+### 2. Start Backend API
 ```bash
-# Install backend dependencies
-pip install -r backend/requirements.txt
-
-# Run FastAPI server
+python -m pip install -r backend/requirements.txt
 python -m uvicorn backend.app.main:app --port 8000 --reload
 ```
-- API Swagger Docs: `http://localhost:8000/docs`
-- Health Endpoint: `http://localhost:8000/api/v1/health`
 
----
-
-### 3. Start the Investigator Frontend
+### 3. Start Frontend UI
 ```bash
 cd frontend
-
-# Install dependencies (already installed if performed earlier)
 npm install
-
-# Start Next.js dev server
 npm run dev
 ```
-- Open `http://localhost:3000` in your browser.
+
+Visit **`http://localhost:3000`** in your browser!
 
 ---
 
-## 🧪 Running Automated Tests
+## 🐳 Docker Deployment
+
+To launch the complete multi-chain platform with Docker Compose:
 ```bash
-# Run unit & integration test suite
-python -m pytest tests/ -v
+docker-compose up -d --build
 ```
+- **Frontend Console**: `http://localhost:3000`
+- **Backend API**: `http://localhost:8000/api/v1`
 
 ---
 
-## 📚 Technical Documentation
+## 📚 Forensic & Architectural Documentation
 
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md): Component breakdown & pipeline flow
-- [DATA_SOURCES.md](docs/DATA_SOURCES.md): Provenance of blockchain data & VASP seed dataset
-- [METHODOLOGY.md](docs/METHODOLOGY.md): Graph traversal algorithms, scoring equations, and risk heuristics
-- [LIMITATIONS.md](docs/LIMITATIONS.md): Technical boundaries, non-claims, and future cross-chain roadmap
-- [API.md](docs/API.md): API documentation with request/response schemas
+- [Low-Level System Architecture](docs/ARCHITECTURE.md)
+- [REST API Reference](docs/API.md)
+- [Data Sources & Provenance](docs/DATA_SOURCES.md)
+- [Production Deployment Guide](docs/DEPLOYMENT.md)
+- [Mathematical Attribution Methodology](docs/METHODOLOGY.md)
+- [VASP Registry Curation Methodology](docs/VASP_REGISTRY.md)
