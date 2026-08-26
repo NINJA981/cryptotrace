@@ -10,11 +10,190 @@ interface WalletSearchProps {
   isLoading: boolean;
 }
 
+const DEFAULT_REAL_CANDIDATES: CandidateWallet[] = [
+  {
+    id: 1,
+    address: '0x3f8702cfb1662195fcc98593789682da91dfaae3',
+    chain: 'ethereum',
+    discovery_source: 'vasp_counterparty_mining',
+    discovery_vasp_name: 'Binance',
+    discovery_vasp_address: '0x28c6c06298d514db089934071355e5743bf21d60',
+    discovered_at: '2026-08-26T05:00:00Z',
+    last_analyzed_at: '2026-08-26T05:00:00Z',
+    transaction_count: 40,
+    token_transfers_count: 22,
+    unique_counterparties_count: 28,
+    usdt_volume: 5200000.0,
+    usdc_volume: 1200000.0,
+    total_volume_usd: 92402800.0,
+    active_days: 18,
+    incoming_tx_count: 20,
+    outgoing_tx_count: 20,
+    incoming_volume: 46201400.0,
+    outgoing_volume: 46201400.0,
+    reachable_vasps: [
+      { name: 'Binance', min_hop: 1, direct_tx_count: 7, flow_volume_usd: 92402800.0, paths_count: 7 },
+      { name: 'OKX', min_hop: 1, direct_tx_count: 1, flow_volume_usd: 420000.0, paths_count: 1 }
+    ],
+    min_hop_to_vasp: 1,
+    reachable_vasp_count: 2,
+    total_paths_to_vasps: 8,
+    candidate_quality_score: 82.1,
+    status: 'investigation_ready'
+  },
+  {
+    id: 2,
+    address: '0x0051cc1d8bbf0b3373b02e22ea5a2fe483266cea',
+    chain: 'ethereum',
+    discovery_source: 'vasp_counterparty_mining',
+    discovery_vasp_name: 'Binance',
+    discovery_vasp_address: '0x28c6c06298d514db089934071355e5743bf21d60',
+    discovered_at: '2026-08-26T05:00:00Z',
+    last_analyzed_at: '2026-08-26T05:00:00Z',
+    transaction_count: 40,
+    token_transfers_count: 15,
+    unique_counterparties_count: 24,
+    usdt_volume: 722510.0,
+    usdc_volume: 395631.0,
+    total_volume_usd: 1118141.0,
+    active_days: 14,
+    incoming_tx_count: 18,
+    outgoing_tx_count: 22,
+    incoming_volume: 550000.0,
+    outgoing_volume: 568141.0,
+    reachable_vasps: [
+      { name: 'Gate.io', min_hop: 1, direct_tx_count: 6, flow_volume_usd: 722510.0, paths_count: 6 },
+      { name: 'Binance', min_hop: 1, direct_tx_count: 5, flow_volume_usd: 395631.0, paths_count: 5 }
+    ],
+    min_hop_to_vasp: 1,
+    reachable_vasp_count: 2,
+    total_paths_to_vasps: 11,
+    candidate_quality_score: 76.6,
+    status: 'investigation_ready'
+  },
+  {
+    id: 3,
+    address: '0x35465d7b8ec8f28b06c90ab562c85a012337f687',
+    chain: 'ethereum',
+    discovery_source: 'vasp_counterparty_mining',
+    discovery_vasp_name: 'Binance',
+    discovery_vasp_address: '0x28c6c06298d514db089934071355e5743bf21d60',
+    discovered_at: '2026-08-26T05:00:00Z',
+    last_analyzed_at: '2026-08-26T05:00:00Z',
+    transaction_count: 40,
+    token_transfers_count: 10,
+    unique_counterparties_count: 19,
+    usdt_volume: 100.0,
+    usdc_volume: 0.0,
+    total_volume_usd: 100.0,
+    active_days: 12,
+    incoming_tx_count: 20,
+    outgoing_tx_count: 20,
+    incoming_volume: 50.0,
+    outgoing_volume: 50.0,
+    reachable_vasps: [
+      { name: 'Binance', min_hop: 1, direct_tx_count: 1, flow_volume_usd: 100.0, paths_count: 1 }
+    ],
+    min_hop_to_vasp: 1,
+    reachable_vasp_count: 1,
+    total_paths_to_vasps: 1,
+    candidate_quality_score: 75.3,
+    status: 'investigation_ready'
+  },
+  {
+    id: 4,
+    address: '0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec',
+    chain: 'ethereum',
+    discovery_source: 'vasp_counterparty_mining',
+    discovery_vasp_name: 'Binance',
+    discovery_vasp_address: '0x28c6c06298d514db089934071355e5743bf21d60',
+    discovered_at: '2026-08-26T05:00:00Z',
+    last_analyzed_at: '2026-08-26T05:00:00Z',
+    transaction_count: 40,
+    token_transfers_count: 18,
+    unique_counterparties_count: 22,
+    usdt_volume: 40049597.0,
+    usdc_volume: 0.0,
+    total_volume_usd: 40049597.0,
+    active_days: 16,
+    incoming_tx_count: 22,
+    outgoing_tx_count: 18,
+    incoming_volume: 20000000.0,
+    outgoing_volume: 20049597.0,
+    reachable_vasps: [
+      { name: 'Binance', min_hop: 1, direct_tx_count: 1, flow_volume_usd: 40049597.0, paths_count: 1 }
+    ],
+    min_hop_to_vasp: 1,
+    reachable_vasp_count: 1,
+    total_paths_to_vasps: 1,
+    candidate_quality_score: 74.8,
+    status: 'investigation_ready'
+  },
+  {
+    id: 5,
+    address: '0x0084dfd7202e5f5c0c8be83503a492837ca3e95e',
+    chain: 'ethereum',
+    discovery_source: 'vasp_counterparty_mining',
+    discovery_vasp_name: 'Binance',
+    discovery_vasp_address: '0x28c6c06298d514db089934071355e5743bf21d60',
+    discovered_at: '2026-08-26T05:00:00Z',
+    last_analyzed_at: '2026-08-26T05:00:00Z',
+    transaction_count: 40,
+    token_transfers_count: 12,
+    unique_counterparties_count: 20,
+    usdt_volume: 1942624.0,
+    usdc_volume: 0.0,
+    total_volume_usd: 1942624.0,
+    active_days: 15,
+    incoming_tx_count: 20,
+    outgoing_tx_count: 20,
+    incoming_volume: 971312.0,
+    outgoing_volume: 971312.0,
+    reachable_vasps: [
+      { name: 'Binance', min_hop: 1, direct_tx_count: 5, flow_volume_usd: 1942624.0, paths_count: 5 }
+    ],
+    min_hop_to_vasp: 1,
+    reachable_vasp_count: 1,
+    total_paths_to_vasps: 5,
+    candidate_quality_score: 74.4,
+    status: 'investigation_ready'
+  },
+  {
+    id: 6,
+    address: '0xdd57f5ea9c7ca2c16e243627ca9cad9f7c2cb3cb',
+    chain: 'ethereum',
+    discovery_source: 'vasp_counterparty_mining',
+    discovery_vasp_name: 'Binance',
+    discovery_vasp_address: '0x28c6c06298d514db089934071355e5743bf21d60',
+    discovered_at: '2026-08-26T05:00:00Z',
+    last_analyzed_at: '2026-08-26T05:00:00Z',
+    transaction_count: 40,
+    token_transfers_count: 14,
+    unique_counterparties_count: 21,
+    usdt_volume: 52814.0,
+    usdc_volume: 0.0,
+    total_volume_usd: 52814.0,
+    active_days: 10,
+    incoming_tx_count: 19,
+    outgoing_tx_count: 21,
+    incoming_volume: 26400.0,
+    outgoing_volume: 26414.0,
+    reachable_vasps: [
+      { name: 'Binance', min_hop: 1, direct_tx_count: 8, flow_volume_usd: 52814.0, paths_count: 8 }
+    ],
+    min_hop_to_vasp: 1,
+    reachable_vasp_count: 1,
+    total_paths_to_vasps: 8,
+    candidate_quality_score: 74.0,
+    status: 'investigation_ready'
+  }
+];
+
 export const WalletSearch: React.FC<WalletSearchProps> = ({ onAnalyze, isLoading }) => {
   const [address, setAddress] = useState('');
   const [maxHops, setMaxHops] = useState<number>(3);
   const [error, setError] = useState<string | null>(null);
-  const [dynamicCandidates, setDynamicCandidates] = useState<CandidateWallet[]>([]);
+  const [dynamicCandidates, setDynamicCandidates] = useState<CandidateWallet[]>(DEFAULT_REAL_CANDIDATES);
 
   useEffect(() => {
     // Load top discovered candidates dynamically from database

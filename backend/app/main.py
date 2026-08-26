@@ -32,6 +32,59 @@ async def lifespan(app: FastAPI):
             await vasp_matcher.sync_to_database(session)
     except Exception as e:
         logger.warning(f"Database VASP sync notice: {e}")
+
+    # 4. Seed discovered candidate wallets if database table is empty
+    try:
+        from backend.app.models.database import CandidateWallet
+        from sqlalchemy import select, func
+        import json
+        from pathlib import Path
+        from datetime import datetime, timezone
+
+        seed_file = Path(__file__).resolve().parent.parent.parent / "data" / "candidates" / "discovered_candidates_seed.json"
+        if seed_file.exists():
+            async with AsyncSessionLocal() as session:
+                cand_count = await session.scalar(select(func.count(CandidateWallet.id))) or 0
+                if cand_count == 0:
+                    with open(seed_file, "r", encoding="utf-8") as f:
+                        cand_items = json.load(f)
+                    for item in cand_items:
+                        cand = CandidateWallet(
+                            address=item["address"],
+                            chain=item["chain"],
+                            discovery_source=item.get("discovery_source", "vasp_counterparty_mining"),
+                            discovery_vasp_name=item["discovery_vasp_name"],
+                            discovery_vasp_address=item["discovery_vasp_address"],
+                            discovered_from_tx_hash=item.get("discovered_from_tx_hash"),
+                            discovered_at=datetime.fromisoformat(item["discovered_at"]) if item.get("discovered_at") else datetime.now(timezone.utc),
+                            last_analyzed_at=datetime.fromisoformat(item["last_analyzed_at"]) if item.get("last_analyzed_at") else datetime.now(timezone.utc),
+                            transaction_count=item["transaction_count"],
+                            token_transfers_count=item.get("token_transfers_count", 0),
+                            unique_counterparties_count=item["unique_counterparties_count"],
+                            usdt_volume=item.get("usdt_volume", 0.0),
+                            usdc_volume=item.get("usdc_volume", 0.0),
+                            total_volume_usd=item["total_volume_usd"],
+                            first_activity=datetime.fromisoformat(item["first_activity"]) if item.get("first_activity") else None,
+                            latest_activity=datetime.fromisoformat(item["latest_activity"]) if item.get("latest_activity") else None,
+                            active_days=item.get("active_days", 1),
+                            incoming_tx_count=item.get("incoming_tx_count", 0),
+                            outgoing_tx_count=item.get("outgoing_tx_count", 0),
+                            incoming_volume=item.get("incoming_volume", 0.0),
+                            outgoing_volume=item.get("outgoing_volume", 0.0),
+                            reachable_vasps_json=item.get("reachable_vasps_json", "[]"),
+                            min_hop_to_vasp=item.get("min_hop_to_vasp", 1),
+                            reachable_vasp_count=item.get("reachable_vasp_count", 1),
+                            total_paths_to_vasps=item.get("total_paths_to_vasps", 1),
+                            candidate_quality_score=item["candidate_quality_score"],
+                            quality_breakdown_json=item.get("quality_breakdown_json", "{}"),
+                            status=item.get("status", "investigation_ready"),
+                            rejection_reason=item.get("rejection_reason")
+                        )
+                        session.add(cand)
+                    await session.commit()
+                    logger.info(f"Auto-seeded {len(cand_items)} verified on-chain candidate wallets.")
+    except Exception as e:
+        logger.warning(f"Candidate wallet auto-seed notice: {e}")
         
     yield
     logger.info("Shutting down service...")
