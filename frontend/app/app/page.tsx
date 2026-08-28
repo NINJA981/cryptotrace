@@ -37,6 +37,7 @@ import {
   ArrowLeft,
   BrainCircuit,
   Database,
+  BookOpen,
 } from 'lucide-react';
 
 export default function InvestigationAppPage() {
@@ -143,7 +144,15 @@ export default function InvestigationAppPage() {
             className="flex items-center space-x-1 text-blue-500 hover:underline font-semibold"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Overview & Documentation</span>
+            <span>Landing Page</span>
+          </Link>
+          <span>•</span>
+          <Link
+            href="/docs"
+            className="flex items-center space-x-1 text-amber-400 hover:underline font-semibold"
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span>Judge Docs (/docs)</span>
           </Link>
           <span>•</span>
           <span>Live Investigation Console</span>

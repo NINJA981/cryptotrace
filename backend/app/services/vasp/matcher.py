@@ -181,6 +181,54 @@ class VASPMatcher:
             "by_status": by_status
         }
 
+    async def sync_to_database(self, session: Any) -> int:
+        """
+        Synchronizes in-memory VASP registry to relational database if needed.
+        """
+        from backend.app.models.database import VASP, VASPAddress
+        from sqlalchemy import select, func
+
+        if not self._loaded:
+            self.load_seed_data()
+
+        existing_count = await session.scalar(select(func.count(VASPAddress.id))) or 0
+        if existing_count > 0:
+            return existing_count
+
+        inserted = 0
+        for vasp_name, vasp_data in self._vasp_map.items():
+            result = await session.execute(select(VASP).where(VASP.name == vasp_name))
+            db_vasp = result.scalar_one_or_none()
+            if not db_vasp:
+                db_vasp = VASP(
+                    name=vasp_name,
+                    category=vasp_data.get("category", "Centralized Exchange"),
+                    risk_rating="LOW"
+                )
+                session.add(db_vasp)
+                await session.flush()
+
+            for a in vasp_data.get("addresses", []):
+                db_addr = VASPAddress(
+                    vasp_id=db_vasp.id,
+                    address=a["address"],
+                    chain=a["chain"],
+                    address_type=a.get("address_type", "hot_wallet"),
+                    source_name=a.get("source_name", "Curated Registry"),
+                    source_url=a.get("source_url"),
+                    source_type=a.get("source_type", "blockchain explorer public label"),
+                    verification_status=a.get("verification_status", "verified"),
+                    confidence=a.get("confidence", "HIGH"),
+                    confidence_score=float(a.get("confidence_score", 95.0)),
+                    notes=a.get("notes")
+                )
+                session.add(db_addr)
+                inserted += 1
+
+        await session.commit()
+        logger.info(f"Synchronized {inserted} VASP addresses to database.")
+        return inserted
+
 
 # Global singleton instance
 vasp_matcher = VASPMatcher()

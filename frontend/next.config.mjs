@@ -7,6 +7,14 @@ const nextConfig = {
         source: '/',
         destination: '/landing.html',
       },
+      {
+        source: '/docs',
+        destination: '/docs.html',
+      },
+      {
+        source: '/docs/:path*',
+        destination: '/docs.html',
+      },
     ];
   },
 };

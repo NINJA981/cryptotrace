@@ -1,7 +1,9 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 
 from backend.app.core.config import settings
 from backend.app.models.database import init_db, AsyncSessionLocal
@@ -126,10 +128,20 @@ async def root():
         "title": "SIH Cryptocurrency Wallet-to-VASP Attribution Platform",
         "version": "1.0.0",
         "docs_url": "/docs",
+        "judge_docs_url": "/judge-docs",
         "api_prefix": "/api/v1",
         "blockchain": "Ethereum Mainnet",
         "max_hops": settings.MAX_HOPS
     }
+
+
+@app.get("/judge-docs", include_in_schema=False)
+@app.get("/docs.html", include_in_schema=False)
+async def serve_judge_docs():
+    docs_path = Path(__file__).resolve().parent.parent.parent / "docs.html"
+    if docs_path.exists():
+        return FileResponse(docs_path, media_type="text/html")
+    return {"error": "docs.html not found"}
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ from typing import Dict, List, Set, Tuple, Any, Optional
 import networkx as nx
 
 from backend.app.core.config import settings
-from backend.app.core.address_validator import normalize_eth_address
+from backend.app.core.address_validator import normalize_address
 from sqlalchemy import select
 from backend.app.models.database import AsyncSessionLocal, Transaction as DBTransaction
 from backend.app.schemas.analysis import (
@@ -49,7 +49,7 @@ class TransactionGraphBuilder:
         Executes bounded BFS from root wallet up to max_hops.
         Fetches genuine blockchain transactions for discovered nodes.
         """
-        root_norm = normalize_eth_address(root_wallet)
+        root_norm = normalize_address(root_wallet)
         self.graph.clear()
         self.all_transactions.clear()
         self.node_hops.clear()
@@ -92,14 +92,26 @@ class TransactionGraphBuilder:
                     continue
 
             for tx in txs:
+                u = tx.from_address
+                v = tx.to_address
+                if not u or not v:
+                    continue
+
+                # Check if we need to add new nodes and whether we hit the max_nodes cap
+                u_is_new = u not in self.node_hops
+                v_is_new = v not in self.node_hops
+                
+                # If adding new nodes would exceed max_nodes cap, stop adding new nodes
+                if u_is_new and len(self.graph.nodes) >= self.max_nodes:
+                    break
+                if v_is_new and len(self.graph.nodes) + (1 if u_is_new else 0) >= self.max_nodes:
+                    break
+
                 tx.hop = current_hop + 1
                 self.all_transactions.append(tx)
 
-                u = tx.from_address
-                v = tx.to_address
-
                 # Determine and assign hops
-                if u not in self.node_hops:
+                if u_is_new:
                     self.node_hops[u] = current_hop + 1
                     self._add_node_to_graph(u, hop=current_hop + 1)
                     if current_hop + 1 < self.max_hops and len(self.graph.nodes) < self.max_nodes:
@@ -107,7 +119,7 @@ class TransactionGraphBuilder:
                         if not vasp_matcher.is_known_vasp(u):
                             queue.append((u, current_hop + 1))
 
-                if v not in self.node_hops:
+                if v_is_new:
                     self.node_hops[v] = current_hop + 1
                     self._add_node_to_graph(v, hop=current_hop + 1)
                     if current_hop + 1 < self.max_hops and len(self.graph.nodes) < self.max_nodes:

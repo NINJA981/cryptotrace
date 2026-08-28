@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional
 import httpx
 
 from backend.app.core.config import settings
-from backend.app.core.address_validator import is_valid_tron_address
+from backend.app.core.address_validator import is_valid_tron_address, hex_to_tron_base58
 from backend.app.schemas.analysis import NormalizedTransaction
 from backend.app.services.blockchain.base import BlockchainProvider
 
@@ -82,8 +82,8 @@ class TronProvider(BlockchainProvider):
                 # TransferContract represents standard TRX transfer
                 if contract_type == "TransferContract":
                     val = contract.get("parameter", {}).get("value", {})
-                    owner_addr = val.get("owner_address", "")
-                    to_addr = val.get("to_address", "")
+                    owner_addr = hex_to_tron_base58(val.get("owner_address", ""))
+                    to_addr = hex_to_tron_base58(val.get("to_address", ""))
                     amount_sun = int(val.get("amount", 0))
                     amount_trx = amount_sun / 1e6
 

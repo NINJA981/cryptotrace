@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 import networkx as nx
 
@@ -55,6 +56,10 @@ class RiskClassifier:
         for _, _, data in graph.edges(data=True):
             ts = data.get("timestamp")
             if ts:
+                if getattr(ts, "tzinfo", None) is None:
+                    ts = ts.replace(tzinfo=timezone.utc)
+                else:
+                    ts = ts.astimezone(timezone.utc)
                 timestamps.append(ts)
 
         if len(timestamps) >= 2:

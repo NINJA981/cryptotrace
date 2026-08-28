@@ -14,6 +14,7 @@ import {
   Network,
   BrainCircuit,
   Radar,
+  BookOpen,
 } from 'lucide-react';
 
 export type ActiveTabType =
@@ -210,6 +211,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>ML Evaluation</span>
             </button>
           )}
+
+          <a
+            href="/docs"
+            className="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-colors font-mono text-[11px]"
+            title="Open Judge Documentation & Technical Dossier (/docs)"
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span>Judge Docs</span>
+          </a>
 
           <div className="hidden lg:flex items-center space-x-2 px-2.5 py-1 rounded bg-forensic-surfaceRaised border border-forensic-border text-[11px] text-forensic-textMuted font-mono">
             <Activity className="h-3 w-3 text-forensic-teal animate-pulse" />
